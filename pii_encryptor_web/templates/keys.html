@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="card">
+  <h2>ניהול מפתחות</h2>
+  <form method="post" action="/keys/create">
+    <label>תווית:</label>
+    <input type="text" name="label" placeholder="Label">
+    <label><input type="checkbox" name="set_default" checked> הגדר כברירת מחדל</label>
+    <button class="btn btn-primary" type="submit">צור מפתח</button>
+  </form>
+</div>
+<div class="card">
+  <h3>מפתחות קיימים</h3>
+  <form method="post" action="/keys/set_default">
+    <select name="key_id">
+      {% for kid, rec in keys.items() %}
+        <option value="{{ kid }}" {% if default_key_id == kid %}selected{% endif %}>{{ kid }} — {{ rec.label }}</option>
+      {% endfor %}
+    </select>
+    <button class="btn" type="submit">קבע כברירת מחדל</button>
+  </form>
+</div>
+{% endblock %}
