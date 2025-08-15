@@ -54,23 +54,13 @@ def try_decode_payload(text: str) -> Optional[dict]:
 def embed_watermarks(text: str, key_id: str, file_id: str, repetitions: int = 3) -> str:
     payload = {"v": 1, "kid": key_id, "fid": file_id}
     zw_block = encode_payload(payload)
-    # Visible light tags
+    # Visible tag for resilience at the end only
     tag = f"[wm|v=1|kid={key_id}|fid={file_id}]"
 
-    out = text
-    if not out:
+    # Embed only at boundaries to avoid corrupting tokens
+    if not text:
         return zw_block + tag
-    positions = []
-    step = max(1, len(out) // (repetitions + 1))
-    for i in range(1, repetitions + 1):
-        positions.append(i * step)
-    offset = 0
-    for i, pos in enumerate(positions):
-        insert_at = min(len(out), pos + offset)
-        block = (zw_block if i % 2 == 0 else tag)
-        out = out[:insert_at] + block + out[insert_at:]
-        offset += len(block)
-    return out
+    return zw_block + text + tag + zw_block
 
 
 def extract_visible_tags(text: str) -> List[Tuple[str, str]]:
