@@ -4,6 +4,7 @@ from pathlib import Path
 
 from .keystore import create_key, list_keys, get_default_key_id, set_default_key_id
 from .processor import encrypt_text, decrypt_text, inspect_text
+from .file_io import read_text_auto, write_text_auto
 
 
 def cmd_keygen(args: argparse.Namespace) -> int:
@@ -38,23 +39,38 @@ def _write_file(path: Path, text: str) -> None:
 
 
 def cmd_encrypt(args: argparse.Namespace) -> int:
-    text = _read_file(Path(args.input))
+    if args.auto:
+        text = read_text_auto(Path(args.input))
+    else:
+        text = _read_file(Path(args.input))
     out, meta = encrypt_text(text, key_id=args.key_id)
-    _write_file(Path(args.output), out)
+    if args.auto:
+        write_text_auto(Path(args.output), out)
+    else:
+        _write_file(Path(args.output), out)
     print(f"Encrypted. key_id={meta['key_id']} file_id={meta['file_id']} pii_found={meta['num_pii']}")
     return 0
 
 
 def cmd_decrypt(args: argparse.Namespace) -> int:
-    text = _read_file(Path(args.input))
+    if args.auto:
+        text = read_text_auto(Path(args.input))
+    else:
+        text = _read_file(Path(args.input))
     out, meta = decrypt_text(text)
-    _write_file(Path(args.output), out)
+    if args.auto:
+        write_text_auto(Path(args.output), out)
+    else:
+        _write_file(Path(args.output), out)
     print(f"Decrypted. key_id={meta.get('key_id')} file_id={meta.get('file_id')} replaced={meta.get('replaced')}")
     return 0
 
 
 def cmd_inspect(args: argparse.Namespace) -> int:
-    text = _read_file(Path(args.input))
+    if args.auto:
+        text = read_text_auto(Path(args.input))
+    else:
+        text = _read_file(Path(args.input))
     info = inspect_text(text)
     print(info)
     return 0
@@ -80,15 +96,18 @@ def build_parser() -> argparse.ArgumentParser:
     p_enc.add_argument("--input", "-i", required=True)
     p_enc.add_argument("--output", "-o", required=True)
     p_enc.add_argument("--key-id", "-k", default=None, help="Key ID to use (defaults to current default)")
+    p_enc.add_argument("--auto", action="store_true", help="Auto-detect DOCX/PDF/TXT for input and output")
     p_enc.set_defaults(func=cmd_encrypt)
 
     p_dec = sub.add_parser("decrypt", help="Decrypt PII tokens in a processed text file")
     p_dec.add_argument("--input", "-i", required=True)
     p_dec.add_argument("--output", "-o", required=True)
+    p_dec.add_argument("--auto", action="store_true", help="Auto-detect DOCX/PDF/TXT for input and output")
     p_dec.set_defaults(func=cmd_decrypt)
 
     p_ins = sub.add_parser("inspect", help="Show embedded key/file IDs and token stats")
     p_ins.add_argument("--input", "-i", required=True)
+    p_ins.add_argument("--auto", action="store_true", help="Auto-detect DOCX/PDF/TXT for input")
     p_ins.set_defaults(func=cmd_inspect)
 
     return p

@@ -86,3 +86,33 @@ def extract_visible_tags(text: str) -> List[Tuple[str, str]]:
             results.append((kid, fid))
         cursor = end + 1
     return results
+
+
+def strip_watermarks(text: str) -> str:
+    """Remove embedded zero-width payload and visible [wm|...] tags."""
+    out = text
+    # remove zero-width payload blocks
+    while True:
+        start_idx = out.find(START)
+        if start_idx == -1:
+            break
+        end_idx = out.find(END, start_idx + len(START))
+        if end_idx == -1:
+            break
+        out = out[:start_idx] + out[end_idx + len(END):]
+    # remove visible tags
+    cur = 0
+    res = []
+    while True:
+        s = out.find("[wm|v=1|kid=", cur)
+        if s == -1:
+            res.append(out[cur:])
+            break
+        res.append(out[cur:s])
+        e = out.find("]", s)
+        if e == -1:
+            # malformed; stop
+            res.append(out[s:])
+            break
+        cur = e + 1
+    return ''.join(res)
