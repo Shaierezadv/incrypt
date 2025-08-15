@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="card">
+  <h2>הצפנת קובץ</h2>
+  <form method="post" action="/encrypt" enctype="multipart/form-data">
+    <div>
+      <label>בחר קובץ (TXT/DOCX/PDF):</label>
+      <input type="file" name="file" required>
+    </div>
+    <div>
+      <label>מפתח:</label>
+      <select name="key_id">
+        <option value="">ברירת מחדל</option>
+        {% for kid, rec in keys.items() %}
+          <option value="{{ kid }}" {% if default_key_id == kid %}selected{% endif %}>{{ kid }} — {{ rec.label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <button class="btn btn-primary" type="submit">הצפן והורד</button>
+  </form>
+  <p>טקסטים רגישים יוחלפו בטוקנים מוצפנים, ובקובץ יושתרו סימני מים לזיהוי המפתח בזמן פענוח.</p>
+</div>
+{% endblock %}
